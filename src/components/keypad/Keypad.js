@@ -5,9 +5,17 @@ export default function Keypad(props) {
   return (
     <div className="keypad">
       <KeypadRow>
-        <Button value="AC" onClick={props.onReset} />
-        <Button value="+/-" onClick={props.onOperatorButtonClick} />
-        <Button value="%" onClick={props.onOperatorButtonClick} />
+        <Button extraClasses="bg-darkgrey" value="AC" onClick={props.onReset} />
+        <Button
+          extraClasses="bg-darkgrey"
+          value="+/-"
+          onClick={props.onSignChangeButtonClick}
+        />
+        <Button
+          extraClasses="bg-darkgrey"
+          value="%"
+          onClick={props.onOperatorButtonClick}
+        />
         <Button
           value="/"
           bgClass="bg-orange"

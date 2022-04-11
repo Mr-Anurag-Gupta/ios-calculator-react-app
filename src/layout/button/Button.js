@@ -3,7 +3,7 @@ export default function Button(props) {
     props.type === "large" ? "keypad__largebutton" : "keypad__button"
   }`;
   classes += `${props.bgClass === undefined ? "" : " " + props.bgClass}`;
-
+  classes += props.extraClasses === undefined ? "" : ` ${props.extraClasses}`;
   return (
     <button
       className={classes}

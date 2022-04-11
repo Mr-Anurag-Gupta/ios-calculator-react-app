@@ -19,6 +19,8 @@ export default class Calculator extends Component {
     this.handleNumericButtonClick = this.handleNumericButtonClick.bind(this);
     this.handleOperatorButtonClick = this.handleOperatorButtonClick.bind(this);
     this.handleEvaluateButtonClick = this.handleEvaluateButtonClick.bind(this);
+    this.handleSignChangeButtonClick =
+      this.handleSignChangeButtonClick.bind(this);
     this.handleReset = this.handleReset.bind(this);
   }
 
@@ -50,14 +52,16 @@ export default class Calculator extends Component {
     // a numeric button is pressed just after the evaluation.
     if (isEvaluationHappened) {
       expression = "";
+      currentValue = "";
       isEvaluationHappened = false;
     }
 
     const regex = /\./;
     if (value === ".") {
       if (!regex.test(currentValue)) {
-        currentValue += value;
-        expression += value;
+        currentValue = currentValue === "" ? "0" + value : currentValue + value;
+        if (expression === "") expression = "0" + value;
+        else expression += value;
       }
     } else {
       expression = expression === "" && value === "0" ? "" : expression + value;
@@ -80,25 +84,8 @@ export default class Calculator extends Component {
     const value = e.target.value;
     const currInputValue = value === "x" ? "*" : value;
 
-    // If the expression is empty, either '+' or '-' can be added.
-    if (expression === "") {
-      console.log(currInputValue + " is pressed");
-      if (currInputValue === "+" || currInputValue === "-") {
-        expression += currInputValue;
-      }
-    }
-    // Replace the operator if the expression only contains
-    // either '+' or '-'.
-    else if (
-      expression.length === 1 &&
-      /(\+|-)/.test(expression) &&
-      /(\+|-)/.test(currInputValue)
-    ) {
-      let newExpression = expression.replace(/(\+|-)/, currInputValue);
-      expression = newExpression;
-    }
     // Add the operator if the expression ends with a digit.
-    else if (/\d$/.test(expression)) {
+    if (/\d$/.test(expression)) {
       expression += currInputValue;
     }
     // Replace the operator if the expression ends with an
@@ -111,13 +98,17 @@ export default class Calculator extends Component {
       expression = newExpression;
     }
 
-    this.setState({ expression, isOperatorDetected: true });
+    this.setState({
+      expression,
+      isEvaluationHappened: false,
+      isOperatorDetected: true,
+    });
   };
 
   handleEvaluateButtonClick(e) {
     const expression = this.state.expression;
-    const opsArray = expression.split(/\d/g).filter((n) => n !== "");
-    const numsArray = expression.split(/\D/g);
+    const opsArray = expression.split(/[0-9.]+/g).filter((n) => n !== "");
+    const numsArray = expression.split(/[/|+|*|-]/g);
 
     let result = numsArray[0];
     for (
@@ -126,7 +117,8 @@ export default class Calculator extends Component {
       numIndex++, opsIndex++
     ) {
       if (opsArray[opsIndex] === "+") {
-        result = Number.parseInt(result) + Number.parseInt(numsArray[numIndex]);
+        result =
+          Number.parseFloat(result) + Number.parseFloat(numsArray[numIndex]);
       } else if (opsArray[opsIndex] === "-") {
         result -= numsArray[numIndex];
       } else if (opsArray[opsIndex] === "*") {
@@ -136,12 +128,40 @@ export default class Calculator extends Component {
       }
     }
 
+    result = this.getReducedSize(result);
+
     this.setState({
-      expression: result,
+      expression: result.toString(),
       isEvaluationHappened: true,
       isOperatorDetected: false,
-      previousCalculationResult: result,
+      previousCalculationResult: result.toString(),
     });
+  }
+
+  handleSignChangeButtonClick(e) {
+    let currentOutput = this.state.previousCalculationResult;
+    let expression = this.state.expression;
+
+    if (currentOutput === undefined || currentOutput === "") return;
+
+    if (currentOutput.indexOf("-") === 0) {
+      currentOutput = currentOutput.slice(1, currentOutput.length);
+      expression = expression.slice(1, expression.length);
+    } else {
+      currentOutput = "-" + currentOutput;
+      expression = "-" + expression;
+    }
+
+    this.setState({
+      previousCalculationResult: currentOutput,
+      expression,
+    });
+  }
+
+  getReducedSize(result) {
+    const len = result.toString().length;
+    if (len >= 9) return result.toString().slice(0, 9);
+    return result;
   }
 
   handleReset(e) {
@@ -156,6 +176,7 @@ export default class Calculator extends Component {
           onNumericButtonClick={this.handleNumericButtonClick}
           onOperatorButtonClick={this.handleOperatorButtonClick}
           onEvaluateButtonClick={this.handleEvaluateButtonClick}
+          onSignChangeButtonClick={this.handleSignChangeButtonClick}
           onReset={this.handleReset}
         />
       </div>
